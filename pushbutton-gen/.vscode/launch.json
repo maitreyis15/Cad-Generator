@@ -1,0 +1,24 @@
+{
+  // Run and Debug panel (F5). Lets you set breakpoints inside pbgen/.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Generate (config.yaml)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pbgen",
+      "args": ["--config", "config.yaml", "--preview"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "View a shape (OCP CAD Viewer)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/view.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ]
+}

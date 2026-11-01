@@ -1,0 +1,45 @@
+{
+  // Terminal > Run Task...  (or Ctrl+Shift+B for the default one)
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Generate all buttons",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["-m", "pbgen", "--config", "config.yaml", "--preview"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Generate one family",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["-m", "pbgen", "--config", "config.yaml", "--family", "${input:family}",
+               "--count", "${input:count}", "--preview"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Quick test (3 of each)",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["-m", "pbgen", "--config", "config.yaml", "--count", "3", "--preview"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Install requirements",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["-m", "pip", "install", "-r", "requirements.txt"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    { "id": "family", "type": "pickString", "description": "Which shape family?",
+      "options": ["rect", "round", "tri"] },
+    { "id": "count", "type": "promptString", "description": "How many?", "default": "20" }
+  ]
+}

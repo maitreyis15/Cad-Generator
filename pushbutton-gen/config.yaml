@@ -1,0 +1,104 @@
+# Pushbutton generator config
+# Run:  python -m pbgen --config config.yaml
+#
+# Sizes ending in _rel are multiples of the body's mount-face width
+# (auto-detected; 23.84 mm for the Rockwell body). That way the same ranges
+# give sensible buttons when you swap in a different body.
+# Ranges are [min, max], sampled uniformly. A single number = fixed value.
+# 
+# This is written by Claude not by me, not fully code checked by me either, but I think it is correct. I just added some comments 
+# and I am taking notes on what I think is going on. I am not sure if this is the best way to do it, but it seems to work for now.
+
+#If you change the reference file, then change line 38!!
+
+seed: 42                 # same seed + same config = identical files
+output_dir: out          # relative to this file
+
+outputs:
+  step_button: true      # <name>_button.step   (button only, for SolidWorks)
+  step_assembly: true    # <name>_assembly.step (button on the body)
+  usd: true              # <name>.usda          (Isaac Sim, references the body)
+
+physics:                 # written into the .usda files
+  enabled: true
+  travel_mm: 4.0                 # how far the button can be pushed down
+  press_fraction: 0.7            # "pressed" when pushed past 70% of travel (pb:press_threshold_m)
+  spring_stiffness_n_per_m: 800  # ~3.2 N at full travel, similar to a real industrial button
+  damping_ns_per_m: 3.0
+  density_kg_m3: 1150            # moulded plastic
+  friction_static: 0.8
+  friction_dynamic: 0.6
+  body_collision: none           # exact triangle mesh; use convexDecomposition if Isaac complains
+
+# ---------------------------------------------------------------- bodies ---
+# Drop more body STEP files in bodies/ and list them here. Each body gets its
+# own output folder. Body must be modelled with +Z as the press direction.
+bodies:
+  - name: rockwell
+    step: bodies/Rockwell_Body.STEP
+    # mount:                    # optional - override the auto-detection
+    #   z: 10.019               # mm, Z of the face the button sits on
+    #   center: [0, 0]          # mm, press axis
+    #   top_diameter: 23.84     # mm, size reference for *_rel values
+
+# ---------------------------------------------- shared defaults (all shapes) ---
+defaults:
+  max_height_mm: 15
+  base_mm: [2.0, 4.0]          # height of the straight side under the top shape
+  tops:                        # weight = how often each top style is picked
+    flat:    {weight: 1}
+    dome:    {weight: 3, h_rel: [0.15, 0.55]}             # dome height / button half-width
+    flattop: {weight: 1, h_rel: [0.3, 0.6], cut_frac: [0.55, 0.8]}
+    dimple:  {weight: 2, h_rel: [0.15, 0.45], dimple_d_rel: [0.3, 0.55], depth_mm: [0.8, 1.6]}
+    dish:    {weight: 2, depth_mm: [0.8, 2.5], rim_mm: [0.8, 2.0], floor_mm: [1.5, 3.0]}
+    pillow:  {weight: 1, edge_r_mm: [1.5, 3.5]}
+
+# -------------------------------------------------------------- families ---
+# prefix + start_index give the file names, e.g. rect_1 ... rect_20.
+# Set start_index to continue an existing set without overwriting it.
+families:
+  rect:
+    count: 20
+    prefix: rect
+    start_index: 1
+    footprint:
+      width_rel: [0.75, 1.0]
+      aspect: [1.0, 1.8]          # 1 = square
+      corner_r_mm: [0.5, 4.0]
+      yaw_deg: 0
+    tops:
+      dome:   {h_rel: [0.12, 0.45]}
+
+  round:                          # the "curves" family: domes, dishes, dimples, mushrooms
+    count: 20
+    prefix: dome
+    start_index: 1
+    footprint:
+      diameter_rel: [0.8, 1.5]
+    mushroom:                     # wider than this x mount face -> gets a neck (e-stop style)
+      above_rel: 1.25
+      neck_d_rel: [0.8, 0.95]
+      neck_h_mm: [2.0, 3.5]
+
+  tri:
+    count: 20
+    prefix: tri
+    start_index: 1
+    footprint:
+      side_rel: [1.5, 2.3]
+      corner_r_mm: [2.0, 6.0]
+      yaw_deg: [0, 120]
+    tops:
+      dome:    {h_rel: [0.08, 0.3]}
+      flattop: {h_rel: [0.15, 0.35]}
+      dimple:  {h_rel: [0.1, 0.3]}
+
+colors:                           # random per button, written to the .usda
+  red:    [0.80, 0.08, 0.08]
+  green:  [0.10, 0.60, 0.20]
+  yellow: [0.95, 0.80, 0.10]
+  blue:   [0.10, 0.30, 0.80]
+  black:  [0.05, 0.05, 0.05]
+  white:  [0.92, 0.92, 0.92]
+  orange: [0.95, 0.45, 0.05]
+  gray:   [0.45, 0.45, 0.47]

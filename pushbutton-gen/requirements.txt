@@ -1,0 +1,7 @@
+cadquery>=2.4
+usd-core>=24.5
+pyyaml>=6.0
+numpy>=1.24
+matplotlib>=3.7
+# optional: 3D viewer inside VS Code (pair with the "OCP CAD Viewer" extension)
+ocp_vscode>=2.0
