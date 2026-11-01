@@ -12,6 +12,8 @@ Ranges are set so that the pushbutton geometries can be altered using a python a
 
 The outputs are usd files that be used as Isaac Sim training files.
 
+Pro Tip: Run python -m pip install -r requirements.txt before running the start command
+
 ---
 
 ## ASSUMPTIONS:
