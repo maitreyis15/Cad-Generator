@@ -5,11 +5,6 @@
 # (auto-detected; 23.84 mm for the Rockwell body). That way the same ranges
 # give sensible buttons when you swap in a different body.
 # Ranges are [min, max], sampled uniformly. A single number = fixed value.
-# 
-# This is written by Claude not by me, not fully code checked by me either, but I think it is correct. I just added some comments 
-# and I am taking notes on what I think is going on. I am not sure if this is the best way to do it, but it seems to work for now.
-
-#If you change the reference file, then change line 38!!
 
 seed: 42                 # same seed + same config = identical files
 output_dir: out          # relative to this file
@@ -17,6 +12,8 @@ output_dir: out          # relative to this file
 outputs:
   step_button: true      # <name>_button.step   (button only, for SolidWorks)
   step_assembly: true    # <name>_assembly.step (button on the body)
+  assembly_mode: multibody   # multibody = one part, 3 bodies (opens cleanly in SolidWorks)
+                             # assembly  = separate components you can mate
   usd: true              # <name>.usda          (Isaac Sim, references the body)
 
 physics:                 # written into the .usda files

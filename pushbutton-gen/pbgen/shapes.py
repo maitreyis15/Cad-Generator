@@ -15,9 +15,6 @@ import math
 from dataclasses import dataclass
 
 import cadquery as cq
-from OCP.TopAbs import TopAbs_EDGE, TopAbs_FACE
-from OCP.TopExp import TopExp
-from OCP.TopTools import TopTools_IndexedDataMapOfShapeListOfShape
 
 FAMILIES = ("rect", "round", "tri")
 TOP_STYLES = ("flat", "dome", "flattop", "dimple", "dish", "pillow")
@@ -129,13 +126,23 @@ def _build_top(fp: Footprint, top: dict) -> cq.Solid:
 
 # ---------------------------------------------------------------- fillets ---
 def _edge_face_map(shape: cq.Shape):
-    m = TopTools_IndexedDataMapOfShapeListOfShape()
-    TopExp.MapShapesAndAncestors_s(shape.wrapped, TopAbs_EDGE, TopAbs_FACE, m)
-    out = {}
-    for i in range(1, m.Extent() + 1):
-        faces = [cq.Face(f) for f in m.FindFromIndex(i)]
-        out[cq.Edge(m.FindKey(i))] = faces
-    return out
+    """For every edge, the faces that touch it.
+
+    Plain CadQuery only (no low-level OCP classes), so it works across
+    CadQuery/OCP versions. Edges are matched with isSame(), which ignores
+    orientation, so an edge shared by two faces is found from both.
+    """
+    edges, faces_of = [], []
+    for f in shape.Faces():
+        for e in f.Edges():
+            for i, known in enumerate(edges):
+                if known.isSame(e):
+                    faces_of[i].append(f)
+                    break
+            else:
+                edges.append(e)
+                faces_of.append([f])
+    return dict(zip(edges, faces_of))
 
 
 def _sharp_edges(shape: cq.Solid, zmin: float, zmax: float):

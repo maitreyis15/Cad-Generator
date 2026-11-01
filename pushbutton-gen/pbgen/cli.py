@@ -50,7 +50,28 @@ def make_one(rng, family, fc, body, max_tries=25):
                        f"check the ranges in config.yaml")
 
 
-def save_assembly(path, name, body, btn):
+def save_assembly(path, name, body, btn, mode="multibody"):
+    """Write body + button as one STEP.
+
+    multibody (default): a single part with one solid body per piece, written
+        like the button files (which open cleanly in SolidWorks).
+    assembly: a STEP assembly with a separate component per piece.
+    """
+    placed = btn.translate(cq.Vector(body.center[0], body.center[1], body.mount_z))
+    if mode == "multibody":
+        try:
+            from OCP.Interface import Interface_Static
+            from OCP.STEPControl import STEPControl_AsIs, STEPControl_Writer
+            Interface_Static.SetCVal_s("write.step.schema", "AP214IS")
+            Interface_Static.SetCVal_s("write.step.unit", "MM")
+            Interface_Static.SetIVal_s("write.step.assembly", 0)  # one part, not an assembly
+            w = STEPControl_Writer()
+            w.Transfer(cq.Compound.makeCompound(list(body.solids) + [placed]).wrapped,
+                       STEPControl_AsIs)
+            w.Write(str(path))
+            return
+        except Exception as e:  # very different OCP version: fall back to an assembly
+            print(f"    (multibody STEP not available: {e}; writing an assembly instead)")
     a = cq.Assembly(name=f"{name}_assembly")
     for s, n in zip(body.solids, body.solid_names):
         a.add(s, name=n, color=cq.Color(0.55, 0.55, 0.57))
@@ -115,7 +136,8 @@ def run(cfg: dict, cfg_dir: Path, only_body=None, only_family=None, count=None,
                 if outs.get("step_button", True):
                     cq.exporters.export(btn, str(vdir / f"{name}_button.step"))
                 if outs.get("step_assembly", True):
-                    save_assembly(vdir / f"{name}_assembly.step", name, body, btn)
+                    save_assembly(vdir / f"{name}_assembly.step", name, body, btn,
+                                  outs.get("assembly_mode", "multibody"))
                 if outs.get("usd", True):
                     from .usd_export import write_variant_usd
                     write_variant_usd(str(vdir / f"{name}.usda"), name, body, str(body_usd),
