@@ -32,7 +32,7 @@ physics:                 # written into the .usda files
 # own output folder. Body must be modelled with +Z as the press direction.
 bodies:
   - name: rockwell
-    step: bodies/Rockwell_Body.STEP
+    step: bodies/3su_Body_zup.Step
     # mount:                    # optional - override the auto-detection
     #   z: 10.019               # mm, Z of the face the button sits on
     #   center: [0, 0]          # mm, press axis

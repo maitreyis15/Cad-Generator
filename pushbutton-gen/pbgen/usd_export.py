@@ -26,6 +26,33 @@ from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics, UsdShade, Vt
 MM = 0.001  # mm -> m
 
 
+def _mesh_vertex_normals(P, T):
+    """Area-weighted vertex normals from triangle winding (fallback)."""
+    N = np.zeros_like(P)
+    tn = np.cross(P[T[:, 1]] - P[T[:, 0]], P[T[:, 2]] - P[T[:, 0]])
+    for k in range(3):
+        np.add.at(N, T[:, k], tn)
+    L = np.linalg.norm(N, axis=1, keepdims=True)
+    L[L == 0] = 1.0
+    return N / L
+
+
+def _face_normals(f, vs, P, T):
+    """Exact surface normals, with a mesh-based fallback at singular points
+    (sphere poles, cone tips, degenerate fillet edges) where OCC can't define one."""
+    out = np.empty_like(P)
+    fallback = None
+    for i, v in enumerate(vs):
+        try:
+            n = f.normalAt(v)
+            out[i] = (n.x, n.y, n.z)
+        except Exception:
+            if fallback is None:
+                fallback = _mesh_vertex_normals(P, T)
+            out[i] = fallback[i]
+    return out
+
+
 def tessellate(shape: cq.Shape, tol=0.02, ang=0.15):
     """Per-face tessellation so normals stay sharp at real edges and smooth on curves."""
     pts, idx, nrm, count = [], [], [], 0
@@ -35,7 +62,7 @@ def tessellate(shape: cq.Shape, tol=0.02, ang=0.15):
             continue
         P = np.array([[v.x, v.y, v.z] for v in vs])
         T = np.array(tris)
-        N = np.array([[n.x, n.y, n.z] for n in (f.normalAt(v) for v in vs)])
+        N = _face_normals(f, vs, P, T)
         # flip shading normals per triangle-winding if they disagree (keeps them outward)
         tn = np.cross(P[T[:, 1]] - P[T[:, 0]], P[T[:, 2]] - P[T[:, 0]])
         vn = N[T].mean(1)
@@ -49,7 +76,6 @@ def tessellate(shape: cq.Shape, tol=0.02, ang=0.15):
     N = np.vstack(nrm)
     N /= np.linalg.norm(N, axis=1, keepdims=True) + 1e-12
     return P, np.vstack(idx), N
-
 
 def _new_stage(path: str):
     if os.path.exists(path):
@@ -148,7 +174,7 @@ def write_variant_usd(path: str, name: str, body, body_usd_path: str, button: cq
         _bind(geom.GetPrim(), look, pmat)
 
         rb = UsdPhysics.RigidBodyAPI.Apply(bprim)
-        rb.CreateKinematicEnabledAttr(True)
+        rb.CreateKinematicEnabledAttr(False)
 
         UsdPhysics.RigidBodyAPI.Apply(btn.GetPrim())
         UsdPhysics.MassAPI.Apply(btn.GetPrim()).CreateDensityAttr(phys["density_kg_m3"])
