@@ -16,7 +16,7 @@ from dataclasses import dataclass
 
 import cadquery as cq
 
-FAMILIES = ("rect", "round", "tri")
+FAMILIES = ("rect", "round", "tri","oval")
 TOP_STYLES = ("flat", "dome", "flattop", "dimple", "dish", "pillow")
 
 
@@ -37,8 +37,10 @@ class Footprint:
             return math.hypot(p["width"] / 2 - cr, p["length"] / 2 - cr) + cr
         if self.family == "tri":
             return p["side"] / math.sqrt(3) - p["corner_r"]
+        if self.family == "oval":
+            return p["length"] / 2
         raise ValueError(self.family)
-
+      
     # radius of the largest circle (about the origin) inside the outline
     @property
     def r_in(self) -> float:
@@ -49,6 +51,8 @@ class Footprint:
             return min(p["width"], p["length"]) / 2
         if self.family == "tri":
             return p["side"] / (2 * math.sqrt(3))
+        if self.family == "oval":
+            return p["width"]/2
         raise ValueError(self.family)
 
     def extrude(self, h: float) -> cq.Solid:
@@ -67,6 +71,8 @@ class Footprint:
             s = wp.polyline(pts).close().extrude(h)
             if p["corner_r"] > 0:
                 s = s.edges("|Z").fillet(p["corner_r"])
+        elif self.family == "oval":
+                    s = wp.slot2D(p["length"], p["width"]).extrude(h)
         else:
             raise ValueError(self.family)
         solid = s.val()

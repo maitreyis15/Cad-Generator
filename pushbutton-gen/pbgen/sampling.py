@@ -16,7 +16,7 @@ from .shapes import Footprint
 def _u(rng, rng_range):
     if isinstance(rng_range, (int, float)):
         return float(rng_range)
-    lo, hi = rng_range
+    lo, hi = rng_
     return float(rng.uniform(lo, hi))
 
 
@@ -47,6 +47,11 @@ def sample_footprint(rng, family: str, fc: dict, ref: float) -> dict:
         s = _u(rng, f["side_rel"]) * ref
         cr = min(_u(rng, f.get("corner_r_mm", [2, 5])), s / (2 * math.sqrt(3)) - 0.5)
         return {"side": round(s, 2), "corner_r": round(cr, 2),
+                "yaw_deg": round(_u(rng, f.get("yaw_deg", 0)), 1)}
+    if family == "oval":
+        w = _u(rng, f["width_rel"]) * ref
+        l = w * _u(rng, f.get("aspect", [1.6, 2.5]))
+        return {"width": round(w, 2), "length": round(l, 2),
                 "yaw_deg": round(_u(rng, f.get("yaw_deg", 0)), 1)}
     raise ValueError(family)
 
