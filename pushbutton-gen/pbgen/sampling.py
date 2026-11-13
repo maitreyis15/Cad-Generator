@@ -16,7 +16,7 @@ from .shapes import Footprint
 def _u(rng, rng_range):
     if isinstance(rng_range, (int, float)):
         return float(rng_range)
-    lo, hi = rng_
+    lo, hi = rng_range
     return float(rng.uniform(lo, hi))
 
 

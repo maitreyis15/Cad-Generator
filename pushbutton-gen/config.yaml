@@ -31,8 +31,8 @@ physics:                 # written into the .usda files
 # Drop more body STEP files in bodies/ and list them here. Each body gets its
 # own output folder. Body must be modelled with +Z as the press direction.
 bodies:
-  - name: siemens_3su
-    step: bodies/3su_Body_zup.Step
+  - name: STC_pushbutton
+    step: bodies/STC_pushbutton_zup.Step
     # mount:                    # optional - override the auto-detection
     #   z: 10.019               # mm, Z of the face the button sits on
     #   center: [0, 0]          # mm, press axis
